@@ -1,47 +1,36 @@
+from collections import OrderedDict
 from rest_framework import serializers
 from recipes.models import Recipe, RecipeIngredient, RecipeTag, Tag, Ingredient, Cart, User
 from djoser.serializers import UserSerializer
+from rest_framework.fields import SkipField
+from rest_framework.relations import PKOnlyObject
 
 
 class TagSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all())
 
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug')
-        extra_kwargs = {
-            'name': {'required': False},
-            'color': {'required': False},
-            'slug': {'required': False}
-        }
-
+    
 
 class IngredientSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    amount = serializers.IntegerField(required=False)
 
     class Meta:
         model = Ingredient
-        fields = ('id', 'name', 'measurement_unit', 'amount')
-        extra_kwargs = {
-            'name': {'required': False},
-            'measurement_unit': {'required': False}
-        }
+        fields = ('id', 'name', 'measurement_unit')
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    name = serializers.SerializerMethodField()
-    measurement_unit = serializers.SerializerMethodField()
+    amount = serializers.IntegerField(min_value=1)
+    name = serializers.CharField(source='ingredient.name', required=False)
+    measurement_unit = serializers.CharField(source='ingredient.measurement_unit', required=False)
 
     class Meta:
         model = RecipeIngredient
-        fields = ('id', 'name', 'measurement_unit', 'amount') 
-
-    def get_name(self, obj):
-        return obj.name
-
-    def get_measurement_unit(self, obj):
-        return obj.measurement_unit
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class CustomUserSerializer(UserSerializer):
@@ -59,7 +48,7 @@ class CustomUserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        if self.context['request'].user.is_authenticated:
+        if self.context['request'] and self.context['request'].user.is_authenticated:
             try:
                 self.context['request'].user.following.get(author=obj)
                 return True
@@ -70,10 +59,10 @@ class CustomUserSerializer(UserSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    tags = TagSerializer(read_only=True, many=True)
-    ingredients = IngredientSerializer(read_only=True, many=True)
+    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
+    ingredients = RecipeIngredientSerializer(many=True)
     author = CustomUserSerializer(read_only=True)
-    is_favorited = serializers.BooleanField(read_only=True)
+    is_favorited = serializers.SerializerMethodField()
     
     class Meta:
         model = Recipe
@@ -84,57 +73,17 @@ class RecipeSerializer(serializers.ModelSerializer):
             'ingredients',
             'is_favorited',
             'name',
-            'image',
-            'text',
-            'cooking_time'
-        )
-        
-
-    # def validate(self, attrs):
-    #     return super().validate(attrs)
-
-    # def create(self, validated_data):
-    #     # ingredients = validated_data.pop('ingredients')
-    #     # tags = validated_data.pop('tags')
-    #     recipe = Recipe.objects.create(**validated_data)
-    #     # for ingredient in ingredients:
-    #         # try:
-    #         #     current_ingredient = Ingredient.objects.get(id=ingredient['id'])
-    #         # except:
-    #         #     raise serializers.ValidationError(f'ингредиент с id={ingredient["id"]} отсутствует')
-    #         # else:
-    #         # RecipeIngredient.objects.create(
-    #             # recipe=recipe,
-    #             # amount=ingredient['amount'],
-    #             # ingredient=ingredient['id']
-    #         # )
-    #     # for tag_id in tags:
-    #     #     try:
-    #     #         current_tag = Tag.objects.get(id=tag_id)
-    #     #     except:
-    #     #         raise serializers.ValidationError(f'тег c id={tag_id} отсутствует')
-    #     #     else:
-    #     #         RecipeTag.objects.create(recipe=recipe, tag=current_tag)
-    #     return recipe
-
-
-class RecipeCreateSerializer(serializers.ModelSerializer):
-    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
-    ingredients = RecipeIngredientSerializer(many=True)
-    author = CustomUserSerializer(read_only=True)
-    
-    class Meta:
-        model = Recipe
-        fields = (
-            'id',
-            'tags',
-            'author',
-            'ingredients',
-            'name',
             # 'image',
             'text',
             'cooking_time'
         )
+
+    def get_is_favorited(self, obj):
+        try:
+            self.context['request'].user.favorite_recipes.get(recipe=obj)
+            return True
+        except:
+            return False
 
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
@@ -154,16 +103,32 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 )
             else:
                 current_ingredient.amount+=ingredient_obj['amount']
+                current_ingredient.save()
         for tag in tags:
             RecipeTag.objects.get_or_create(recipe=recipe, tag=tag)
-        print()
-        print()
-        print()
-        print(recipe.ingredients.all())
-        print()
-        print()
-        print()
         return recipe
+
+    def to_representation(self, instance):    
+        ret = OrderedDict()
+        fields = self._readable_fields
+
+        for field in fields:
+            try:
+                if field.field_name == 'ingredients':
+                    attribute = instance.ingredients_lst.all()
+                else:
+                    attribute = field.get_attribute(instance)
+            except SkipField:
+                continue
+            check_for_none = attribute.pk if isinstance(attribute, PKOnlyObject) else attribute
+            if check_for_none is None:
+                ret[field.field_name] = None
+            elif field.field_name == 'tags':
+                ret['tags'] = TagSerializer(instance.tags.all(), many=True).data
+            else:
+                ret[field.field_name] = field.to_representation(attribute)
+
+        return ret
 
 
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
@@ -180,6 +145,7 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 class FollowUserSerializer(CustomUserSerializer):
     recipes = RecipeSerializer(many=True, read_only=True)
     recipes_count = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
     
     def get_recipes_count(self, obj):
         return obj.recipes.count()

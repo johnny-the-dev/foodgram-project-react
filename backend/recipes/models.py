@@ -109,6 +109,7 @@ class Recipe(models.Model):
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
+        related_name='ingredients_lst',
         on_delete=models.CASCADE,
         verbose_name='Рецепт'
     )
@@ -121,13 +122,18 @@ class RecipeIngredient(models.Model):
     )
     amount = models.IntegerField(
         verbose_name='Количество',
-        help_text='Укажите количество ингредиента'
+        help_text='Укажите количество ингредиента',
+        null=True,
+        blank=True
     )
 
+    def __str__(self):
+        return f"'id': {self.ingredient.name}, 'amount': {self.amount}"
 
 class RecipeTag(models.Model):
     recipe = models.ForeignKey(
         Recipe,
+        related_name='tags_lst',
         on_delete=models.CASCADE,
         verbose_name='Рецепт'
     )

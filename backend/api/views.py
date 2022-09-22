@@ -1,12 +1,13 @@
 from .serializers import (
-    CustomUserSerializer, FollowUserSerializer, IngredientSerializer, RecipeCreateSerializer, RecipeIngredientSerializer, 
+    CustomUserSerializer, FollowUserSerializer, IngredientSerializer, 
     RecipeSerializer, TagSerializer, FavoriteRecipeSerializer
 )
+from .permissions import IsAuthorOrReadonly
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from recipes.models import Favorite, Follow, Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import Favorite, Follow, Ingredient, Recipe, Tag
 from django.contrib.auth import get_user_model
 from djoser.views import UserViewSet
 
@@ -27,32 +28,10 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all()
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    
-    def get_serializer_class(self):
-        self.get_ingredients()
-        if self.action == 'create':
-            return RecipeCreateSerializer
-        return super().get_serializer_class()
-
-    def get_ingredients(self):
-        ingredients = []
-        ingredient_amounts = self.request.data['ingredients']
-        for ingredient_amount in ingredient_amounts:
-            serializer = RecipeIngredientSerializer(data=ingredient_amount)
-            serializer.is_valid(raise_exception=True)
-            ingredient_lst = {**serializer.validated_data}
-            ingredient = {
-                'id': ingredient_lst['id'].id,
-                'name': ingredient_lst['id'].name,
-                'measurement_unit': ingredient_lst['id'].measurement_unit,
-                'amount': ingredient_lst['amount']
-            }
-            ingredients.append(ingredient)
-        return ingredients      
+    permission_classes = (IsAuthorOrReadonly,)
 
     
-    def perform_create(self, serializer):        
+    def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
     @action(
@@ -85,10 +64,13 @@ class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
 
+
     def get_permissions(self):
-        if self.action == 'list':
-            return (permissions.AllowAny(),)
-        return super().get_permissions()
+        if self.action == 'retrieve':
+            self.permission_classes = (permissions.IsAuthenticated,)
+        elif self.action == 'list':
+            self.permission_classes = (permissions.AllowAny,)
+        return super(self.__class__, self).get_permissions()
 
     def get_serializer_class(self):
         if self.action == 'me':
