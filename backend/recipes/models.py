@@ -77,7 +77,7 @@ class Recipe(models.Model):
     image = models.ImageField(
         verbose_name='Изображение',
         help_text='Выберите изображение',
-        upload_to='recipes/'
+        upload_to='recipes/images/'
     )
     text = models.TextField(
         verbose_name='Описание рецепта',
@@ -128,7 +128,7 @@ class RecipeIngredient(models.Model):
     )
 
     def __str__(self):
-        return f"'id': {self.ingredient.name}, 'amount': {self.amount}"
+        return f"'ingredient': {self.ingredient.name}, 'amount': {self.amount}"
 
 class RecipeTag(models.Model):
     recipe = models.ForeignKey(

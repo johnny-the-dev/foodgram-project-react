@@ -34,6 +34,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = False
+        return self.update(request, *args, **kwargs)
+
     @action(
         methods=('post', 'delete'),
         detail=True,
@@ -64,13 +68,6 @@ class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
 
-
-    def get_permissions(self):
-        if self.action == 'retrieve':
-            self.permission_classes = (permissions.IsAuthenticated,)
-        elif self.action == 'list':
-            self.permission_classes = (permissions.AllowAny,)
-        return super(self.__class__, self).get_permissions()
 
     def get_serializer_class(self):
         if self.action == 'me':
