@@ -1,13 +1,13 @@
 import base64
 from collections import OrderedDict
 from rest_framework import serializers
-from recipes.models import Recipe, RecipeIngredient, RecipeTag, Tag, Ingredient, Cart, User
+from recipes.models import Recipe, RecipeIngredient, RecipeTag, Tag, Ingredient, Cart
 from djoser.serializers import UserSerializer
-from rest_framework.fields import SkipField
-from rest_framework.relations import PKOnlyObject
 from django.core.files.base import ContentFile
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 
+User = get_user_model()
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
@@ -76,6 +76,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientSerializer(many=True)
     author = CustomUserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
     image = Base64ImageField()
     cooking_time = serializers.IntegerField(min_value=1)
     
@@ -87,11 +88,26 @@ class RecipeSerializer(serializers.ModelSerializer):
             'author',
             'ingredients',
             'is_favorited',
+            'is_in_shopping_cart',
             'name',
             'image',
             'text',
             'cooking_time'
         )
+
+    def get_is_favorited(self, obj):
+        try:
+            self.context['request'].user.favorite_recipes.get(recipe=obj)
+            return True
+        except:
+            return False
+
+    def get_is_in_shopping_cart(self, obj):
+        try:
+            self.context['request'].user.cart.get(recipe=obj)
+            return True
+        except:
+            return False
 
     def validate_ingredients(self, value):
         if value:
@@ -103,50 +119,35 @@ class RecipeSerializer(serializers.ModelSerializer):
             return value
         raise serializers.ValidationError('Добавьте хотя бы один тег.')
 
-    def get_is_favorited(self, obj):
-        try:
-            self.context['request'].user.favorite_recipes.get(recipe=obj)
-            return True
-        except:
-            return False
+    def add_ingredient(self, ingredient, instance):
+        # Если один ингредиент указан несколько раз, значение amount складывается
+        current_ingredient, status = RecipeIngredient.objects.get_or_create(
+            recipe=instance,
+            ingredient=ingredient['id']
+        )
+        if status:
+            current_ingredient.amount = ingredient['amount']    
+        else:
+            current_ingredient.amount += ingredient['amount']
+        current_ingredient.save()
 
     def create(self, validated_data):
-        # Если один ингредиент указан несколько раз, значение amount складывается
-
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         for ingredient_obj in ingredients:
-            current_ingredient, status = RecipeIngredient.objects.get_or_create(
-                recipe=recipe,
-                ingredient=ingredient_obj['id']
-            )
-            if status:
-                current_ingredient.amount = ingredient_obj['amount']    
-            else:
-                current_ingredient.amount += ingredient_obj['amount']
-            current_ingredient.save()
+            self.add_ingredient(ingredient_obj, recipe)
         for tag in tags:
             RecipeTag.objects.get_or_create(recipe=recipe, tag=tag)
         return recipe
 
     def update(self, instance, validated_data):
-        # Если один ингредиент указан несколько раз, значение amount складывается
-
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         instance.ingredients_lst.all().delete()
         instance.tags_lst.all().delete()
         for ingredient_obj in ingredients:
-            current_ingredient, status = RecipeIngredient.objects.get_or_create(
-                recipe=instance,
-                ingredient=ingredient_obj['id']
-            )
-            if status:
-                current_ingredient.amount = ingredient_obj['amount']    
-            else:
-                current_ingredient.amount += ingredient_obj['amount']
-            current_ingredient.save()
+            self.add_ingredient(ingredient_obj, instance)
         for tag in tags:
             RecipeTag.objects.create(recipe=instance, tag=tag)
         instance.name = validated_data['name']
@@ -160,17 +161,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = self._readable_fields
 
         for field in fields:
-            try:
-                if field.field_name == 'ingredients':
-                    attribute = instance.ingredients_lst.all()
-                else:
-                    attribute = field.get_attribute(instance)
-            except SkipField:
-                continue
-            check_for_none = attribute.pk if isinstance(attribute, PKOnlyObject) else attribute
-            if check_for_none is None:
-                ret[field.field_name] = None
-            elif field.field_name == 'tags':
+            if field.field_name == 'ingredients':
+                attribute = instance.ingredients_lst.all()
+            else:
+                attribute = field.get_attribute(instance)    
+
+            if field.field_name == 'tags':
                 ret['tags'] = TagSerializer(instance.tags.all(), many=True).data
             else:
                 ret[field.field_name] = field.to_representation(attribute)

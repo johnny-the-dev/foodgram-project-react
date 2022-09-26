@@ -5,7 +5,6 @@ User = get_user_model()
 
 
 class Tag(models.Model):
-    id = models.BigAutoField(primary_key=True)
     name = models.CharField(
         max_length=100,
         unique=True,
@@ -33,7 +32,6 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
-    id = models.BigAutoField(primary_key=True)
     name = models.CharField(
         max_length=100,
         unique=True,
@@ -57,7 +55,6 @@ class Ingredient(models.Model):
 
 
 class Recipe(models.Model):
-    id = models.BigAutoField(primary_key=True)
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -183,16 +180,16 @@ class Favorite(models.Model):
 
 class Cart(models.Model):
     id = models.BigAutoField(primary_key=True)
-    owner = models.ForeignKey(
+    user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name='Владелец списка',
         related_name='cart'
     )
-    ingredient = models.ForeignKey(
-        Ingredient,
-        verbose_name='Ингредиент',
-        on_delete=models.CASCADE
+    recipe = models.ForeignKey(
+        Recipe,
+        verbose_name='Рецепт',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True
     )
-    count = models.IntegerField()
-
