@@ -9,9 +9,11 @@ from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from recipes.models import Cart, Favorite, Follow, Ingredient, Recipe, Tag
 from django.contrib.auth import get_user_model
 from djoser.views import UserViewSet
+from .filters import RecipeFilter
 
 
 User = get_user_model()
@@ -24,8 +26,8 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['^name']
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name',)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -33,6 +35,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (IsAuthorOrReadonly,)
     pagination_class = PageNumberLimitPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
     
     
     def perform_create(self, serializer):

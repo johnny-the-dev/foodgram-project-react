@@ -1,11 +1,10 @@
 import base64
 from collections import OrderedDict
 from rest_framework import serializers
-from recipes.models import Recipe, RecipeIngredient, RecipeTag, Tag, Ingredient, Cart
+from recipes.models import Recipe, RecipeIngredient, RecipeTag, Tag, Ingredient
 from djoser.serializers import UserSerializer
 from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 
 User = get_user_model()
 

@@ -24,6 +24,7 @@ class Tag(models.Model):
     )
 
     class Meta:
+        ordering = ['name']
         verbose_name_plural = 'Теги'
         verbose_name = 'Тег'
 
@@ -47,6 +48,7 @@ class Ingredient(models.Model):
 
 
     class Meta:
+        ordering = ['name']
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
 
@@ -179,7 +181,6 @@ class Favorite(models.Model):
 
 
 class Cart(models.Model):
-    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -190,6 +191,7 @@ class Cart(models.Model):
         Recipe,
         verbose_name='Рецепт',
         on_delete=models.CASCADE,
+        related_name='cart',
         blank=True,
         null=True
     )
