@@ -52,6 +52,7 @@ class Ingredient(models.Model):
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
 
+
     def __str__(self):
         return self.name
 
@@ -110,7 +111,9 @@ class RecipeIngredient(models.Model):
         Recipe,
         related_name='ingredients_lst',
         on_delete=models.CASCADE,
-        verbose_name='Рецепт'
+        verbose_name='Рецепт',
+        blank=True,
+        null=True
     )
     ingredient = models.ForeignKey(
         Ingredient,
