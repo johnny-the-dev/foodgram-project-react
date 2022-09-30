@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth import get_user_model
+from django.db import models
 
 User = get_user_model()
 
@@ -46,12 +46,10 @@ class Ingredient(models.Model):
         help_text='Введите меру измерения'
     )
 
-
     class Meta:
         ordering = ['name']
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
-
 
     def __str__(self):
         return self.name
@@ -96,7 +94,7 @@ class Recipe(models.Model):
         auto_now_add=True,
         db_index=True
     )
-    
+
     class Meta:
         ordering = ['-pub_date']
         verbose_name_plural = 'Рецепты'
@@ -132,6 +130,7 @@ class RecipeIngredient(models.Model):
     def __str__(self):
         return f"'ingredient': {self.ingredient.name}, 'amount': {self.amount}"
 
+
 class RecipeTag(models.Model):
     recipe = models.ForeignKey(
         Recipe,
@@ -144,7 +143,7 @@ class RecipeTag(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Тег',
         help_text='Выберите тег'
-    )    
+    )
 
 
 class Follow(models.Model):
@@ -152,7 +151,7 @@ class Follow(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Подписчик',
-        related_name='following'    
+        related_name='following'
     )
     author = models.ForeignKey(
         User,

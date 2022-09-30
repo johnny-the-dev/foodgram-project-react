@@ -1,6 +1,6 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core import validators
+from django.db import models
 
 
 class User(AbstractUser):
@@ -48,7 +48,7 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == self.ADMIN   
+        return self.role == self.ADMIN
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = (

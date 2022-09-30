@@ -1,5 +1,6 @@
 from django.contrib import admin
-from recipes.models import Recipe, Tag, Ingredient, RecipeIngredient
+
+from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 
 
 class RecipeIngredientAdmin(admin.TabularInline):
@@ -24,6 +25,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     get_favorite_count.short_description = 'в избранном'
 
+
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name',)
@@ -36,5 +38,4 @@ class IngredientAdmin(admin.ModelAdmin):
         'name',
         'measurement_unit'
     )
-    list_filter = ('name',)    
-
+    list_filter = ('name',)

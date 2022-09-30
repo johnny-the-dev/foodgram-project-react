@@ -1,12 +1,16 @@
 import base64
 from collections import OrderedDict
-from rest_framework import serializers
-from recipes.models import Recipe, RecipeIngredient, RecipeTag, Tag, Ingredient
-from djoser.serializers import UserSerializer
-from django.core.files.base import ContentFile
+
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
+from djoser.serializers import UserSerializer
+from rest_framework import serializers
+
+from recipes.models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag
+
 
 User = get_user_model()
+
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
@@ -18,13 +22,14 @@ class Base64ImageField(serializers.ImageField):
 
         return super().to_internal_value(data)
 
+
 class TagSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all())
 
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug')
-    
+
 
 class IngredientSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
@@ -38,16 +43,18 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
     amount = serializers.IntegerField(min_value=1)
     name = serializers.CharField(source='ingredient.name', required=False)
-    measurement_unit = serializers.CharField(source='ingredient.measurement_unit', required=False)
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit', required=False
+        )
 
     class Meta:
         model = RecipeIngredient
-        fields = ('id', 'name', 'measurement_unit', 'amount')  
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = User
         fields = (
@@ -60,7 +67,8 @@ class CustomUserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        if self.context['request'] and self.context['request'].user.is_authenticated:
+        if (self.context['request'] and
+                self.context['request'].user.is_authenticated):
             try:
                 self.context['request'].user.following.get(author=obj)
                 return True
@@ -71,14 +79,16 @@ class CustomUserSerializer(UserSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(), many=True
+        )
     ingredients = RecipeIngredientSerializer(many=True)
     author = CustomUserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = Base64ImageField()
     cooking_time = serializers.IntegerField(min_value=1)
-    
+
     class Meta:
         model = Recipe
         fields = (
@@ -119,13 +129,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         raise serializers.ValidationError('Добавьте хотя бы один тег.')
 
     def add_ingredient(self, ingredient, instance):
-        # Если один ингредиент указан несколько раз, значение amount складывается
         current_ingredient, status = RecipeIngredient.objects.get_or_create(
             recipe=instance,
             ingredient=ingredient['id']
         )
         if status:
-            current_ingredient.amount = ingredient['amount']    
+            current_ingredient.amount = ingredient['amount']
         else:
             current_ingredient.amount += ingredient['amount']
         current_ingredient.save()
@@ -155,7 +164,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.image = validated_data['image']
         return instance
 
-    def to_representation(self, instance):    
+    def to_representation(self, instance):
         ret = OrderedDict()
         fields = self._readable_fields
 
@@ -163,10 +172,12 @@ class RecipeSerializer(serializers.ModelSerializer):
             if field.field_name == 'ingredients':
                 attribute = instance.ingredients_lst.all()
             else:
-                attribute = field.get_attribute(instance)    
+                attribute = field.get_attribute(instance)
 
             if field.field_name == 'tags':
-                ret['tags'] = TagSerializer(instance.tags.all(), many=True).data
+                ret['tags'] = TagSerializer(
+                    instance.tags.all(), many=True
+                    ).data
             else:
                 ret[field.field_name] = field.to_representation(attribute)
 
@@ -182,7 +193,7 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'image',
-            'cooking_time'    
+            'cooking_time'
         )
 
 
@@ -190,7 +201,7 @@ class FollowUserSerializer(CustomUserSerializer):
     recipes = FavoriteRecipeSerializer(many=True, read_only=True)
     recipes_count = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
-    
+
     def get_recipes_count(self, obj):
         return obj.recipes.count()
 
