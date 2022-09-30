@@ -14,7 +14,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', default='0000')
 DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1',
-                 'localhost']
+                 'localhost',
+                 '51.250.68.248']
 
 AUTH_USER_MODEL = 'users.User'
 # Application definition
