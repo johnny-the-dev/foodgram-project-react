@@ -131,6 +131,6 @@ dmypy.json
 # .idea
 .idea
 
-*.media/
-*.static/
-*.node_modules/
+*/media/
+*/static/
+*/node_modules/
