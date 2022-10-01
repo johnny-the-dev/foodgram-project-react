@@ -1,15 +1,12 @@
 import base64
 from collections import OrderedDict
 
-from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
 from recipes.models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag
-
-
-User = get_user_model()
+from users.models import User
 
 
 class Base64ImageField(serializers.ImageField):
@@ -67,15 +64,11 @@ class CustomUserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        if (self.context['request'] and
-                self.context['request'].user.is_authenticated):
-            try:
-                self.context['request'].user.following.get(author=obj)
-                return True
-            except:
-                return False
-        else:
-            return False
+        return (
+            self.context['request'] and
+            self.context['request'].user.is_authenticated and
+            self.context['request'].user.following.filter(author=obj).exists()
+        )
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -105,18 +98,11 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def get_is_favorited(self, obj):
-        try:
-            self.context['request'].user.favorite_recipes.get(recipe=obj)
-            return True
-        except:
-            return False
+        return (self.context['request'].user.favorite_recipes.
+                filter(recipe=obj).exists())
 
     def get_is_in_shopping_cart(self, obj):
-        try:
-            self.context['request'].user.cart.get(recipe=obj)
-            return True
-        except:
-            return False
+        return self.context['request'].user.cart.filter(recipe=obj).exists()
 
     def validate_ingredients(self, value):
         if value:
@@ -200,13 +186,9 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 class FollowUserSerializer(CustomUserSerializer):
     recipes = FavoriteRecipeSerializer(many=True, read_only=True)
     recipes_count = serializers.SerializerMethodField()
-    is_subscribed = serializers.SerializerMethodField()
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
-
-    def get_is_subscribed(self, obj):
-        return True
 
     class Meta:
         model = User

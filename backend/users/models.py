@@ -10,8 +10,12 @@ class User(AbstractUser):
         (ADMIN, 'admin'),
         (USER, 'user'),
     )
-
-    id = models.BigAutoField(primary_key=True)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = (
+        'username',
+        'first_name',
+        'last_name'
+    )
 
     username = models.CharField(
         verbose_name='Никнейм',
@@ -43,24 +47,16 @@ class User(AbstractUser):
         help_text='Введите фамилию',
         max_length=150
     )
-
     is_subscribed = models.BooleanField(default=False)
-
-    @property
-    def is_admin(self):
-        return self.role == self.ADMIN
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = (
-        'username',
-        'first_name',
-        'last_name'
-    )
 
     class Meta:
         ordering = ('username',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN
 
     def __str__(self):
         return self.username

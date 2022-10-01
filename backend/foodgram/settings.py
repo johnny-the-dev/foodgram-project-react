@@ -10,10 +10,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', default='0000')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1',
-                 'localhost',
-                 '51.250.68.248',
-                 'foodgramproject.sytes.net']
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -71,10 +68,10 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
-        'NAME': os.getenv('DB_NAME', default='foodgram'),
+        'NAME': os.getenv('DB_NAME', default='postgres'),
         'USER': os.getenv('POSTGRES_USER', default='postgres'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='0000'),
-        'HOST': os.getenv('DB_HOST', default='localhost'),
+        'HOST': os.getenv('DB_HOST', default='db'),
         'PORT': os.getenv('DB_PORT', default='5432')
     }
 }
@@ -108,7 +105,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
         'rest_framework.pagination.PageNumberPagination',
         'PAGE_SIZE': 10,
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ],
 }
 
 DJOSER = {
@@ -119,11 +118,7 @@ DJOSER = {
      },
 }
 
-CORS_ORIGIN_ALLOW_ALL = False
-
-CORS_ORIGIN_WHITELIST = (
-       'http://localhost:3000',
-)
+CORS_ORIGIN_ALLOW_ALL = True
 
 LANGUAGE_CODE = 'ru'
 

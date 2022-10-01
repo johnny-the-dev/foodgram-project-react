@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
@@ -7,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from recipes.models import Cart, Favorite, Follow, Ingredient, Recipe, Tag
+from users.models import User
 
 from .filters import RecipeFilter
 from .pagination import PageNumberLimitPagination, SubscriptionsPagination
@@ -15,8 +15,6 @@ from .renrerers import CSVCartRenderer
 from .serializers import (CustomUserSerializer, FavoriteRecipeSerializer,
                           FollowUserSerializer, IngredientSerializer,
                           RecipeSerializer, TagSerializer)
-
-User = get_user_model()
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -49,20 +47,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_renderers(self):
         if (self.action == 'download_shopping_cart' and
                 self.request.user.is_authenticated):
-            return [CSVCartRenderer()]
+            return (CSVCartRenderer(),)
         return super().get_renderers()
 
-    @action(
-        methods=('post', 'delete'),
-        detail=True,
-        permission_classes=(permissions.IsAuthenticated,),
-        url_path='favorite',
-        serializer_class=FavoriteRecipeSerializer
-    )
-    def favorite(self, request, pk):
+    def post_del_base(self, request, model, post_error_msg, delete_error_msg):
         recipe = self.get_object()
         if request.method == 'POST':
-            _, is_created = Favorite.objects.get_or_create(
+            _, is_created = model.objects.get_or_create(
                 user=request.user,
                 recipe=recipe
             )
@@ -72,22 +63,52 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     serializer.data, status=status.HTTP_201_CREATED
                 )
             return Response(
-                {'error': 'Рецепт уже есть в избранном.'},
+                {'error': f'{post_error_msg}'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        try:
-            favorite = request.user.favorite_recipes.get(recipe=recipe)
-        except:
-            return Response(
-                {'error': 'Рецепт не является избранным.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        else:
-            favorite.delete()
+        object_to_delete = model.objects.filter(recipe=recipe,
+                                                user=request.user).first()
+        if object_to_delete:
+            object_to_delete.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(
+                {'error': f'{delete_error_msg}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(
-        methods=['get'],
+        methods=('post', 'delete'),
+        detail=True,
+        permission_classes=(permissions.IsAuthenticated,),
+        url_path='favorite',
+        serializer_class=FavoriteRecipeSerializer
+    )
+    def favorite(self, request, pk):
+        return self.post_del_base(
+            request,
+            Favorite,
+            'Рецепт уже есть в избранном.',
+            'Рецепт не является избранным.'
+        )
+
+    @action(
+        methods=('post', 'delete'),
+        detail=True,
+        url_path='shopping_cart',
+        permission_classes=(permissions.IsAuthenticated,),
+        serializer_class=FavoriteRecipeSerializer
+    )
+    def shopping_cart(self, request, pk):
+        return self.post_del_base(
+            request,
+            Cart,
+            'Рецепт уже есть в корзине.',
+            'Рецепт отсутствует в корзине.'
+        )
+
+    @action(
+        methods=('get',),
         detail=False,
         url_path='download_shopping_cart',
         permission_classes=(permissions.IsAuthenticated,),
@@ -112,39 +133,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             content_type='text/csv',
             status=status.HTTP_200_OK
         )
-
-    @action(
-        methods=['post', 'delete'],
-        detail=True,
-        url_path='shopping_cart',
-        permission_classes=(permissions.IsAuthenticated,),
-        serializer_class=FavoriteRecipeSerializer
-    )
-    def shopping_cart(self, request, pk):
-        recipe = self.get_object()
-        if request.method == 'POST':
-            _, is_created = Cart.objects.get_or_create(
-                user=request.user, recipe=recipe
-            )
-            if is_created:
-                serializer = self.get_serializer(recipe)
-                return Response(
-                    serializer.data, status=status.HTTP_201_CREATED
-                )
-            return Response(
-                {'error': 'Рецепт уже есть в корзине.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        try:
-            cart_recipe = request.user.cart.get(recipe=recipe)
-        except:
-            return Response(
-                {'error': 'Рецепт отсутствует в корзине.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        else:
-            cart_recipe.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CustomUserViewSet(UserViewSet):
@@ -184,16 +172,14 @@ class CustomUserViewSet(UserViewSet):
                 {'error': 'Вы уже подписаны на данного автора'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        try:
-            favorite = request.user.following.get(author=author)
-        except:
-            return Response(
-                {'error': 'Вы не подписаны на данного автора.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        else:
+        favorite = request.user.following.filter(author=author).first()
+        if favorite:
             favorite.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'error': 'Вы не подписаны на данного автора.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @action(
         methods=('get',),
