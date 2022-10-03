@@ -133,5 +133,7 @@ dmypy.json
 
 */media/
 */static/
+*/backend_media/
+*/backend_static/
 */node_modules/
 infra/
