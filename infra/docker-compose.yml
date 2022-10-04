@@ -13,8 +13,8 @@ services:
   backend:
     image: johnnyvandev/foodgram_backend:1.0.0
     volumes:
-      - static_value:/app/static/
-      - media_value:/app/media/ 
+      - static_value:/app/backend_static/
+      - media_value:/app/backend_media/ 
     depends_on:
       - db
     env_file:

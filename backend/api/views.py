@@ -116,16 +116,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         instance = request.user.cart.all()
         cart_dct = {}
-        for cart_obj in instance:
-            for ingredient_amount in cart_obj.recipe.ingredients_lst.all():
+        for obj in instance:
+            for ingredient_amount in obj.recipe.ingredients_lst.all():
                 ingredient = ingredient_amount.ingredient.name
                 if ingredient in cart_dct:
-                    cart_dct[ingredient] += ingredient_amount.amount
+                    cart_dct[ingredient][0] += ingredient_amount.amount
                 else:
-                    cart_dct[ingredient] = ingredient_amount.amount
-        result = [
-            {'Ингредиент': ingredient, 'Количество': cart_dct[ingredient]} for
-            ingredient in cart_dct
+                    cart_dct[ingredient] = [
+                        ingredient_amount.amount,
+                        ingredient_amount.ingredient.measurement_unit
+                    ]
+        result = [{
+            'Ингредиент': ingredient,
+            'Мера измерения': cart_dct[ingredient][1],
+            'Количество': cart_dct[ingredient][0]
+            } for ingredient in cart_dct
         ]
         return Response(
             result,
