@@ -1,27 +1,36 @@
-name: foodgram-projext workflow
+name: foodgram-project workflow
 
 on: [push]
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          backend:
+            - 'backend/**'
+          frontend:
+            - 'frontend/**'
   tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v2
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with: 
-        filters: |
-          backend:
-            - 'backend/**'
-    
-    - name: Set up Python    
+
+    - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
     
     - name: Install dependencies
-      if: steps.filter.outputs.backend == 'true'
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pep8-naming flake8-broken-line flake8-return flake8-isort
