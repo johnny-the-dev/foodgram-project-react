@@ -116,7 +116,9 @@ class RecipeIngredient(models.Model):
         related_name='recipes',
         on_delete=models.CASCADE,
         verbose_name='Ингредиент',
-        help_text='Выберите ингредиент'
+        help_text='Выберите ингредиент',
+        blank=True,
+        null=True
     )
     amount = models.IntegerField(
         verbose_name='Количество',
@@ -134,13 +136,17 @@ class RecipeTag(models.Model):
         Recipe,
         related_name='tags_lst',
         on_delete=models.CASCADE,
-        verbose_name='Рецепт'
+        verbose_name='Рецепт',
+        blank=True,
+        null=True
     )
     tag = models.ForeignKey(
         Tag,
         on_delete=models.CASCADE,
         verbose_name='Тег',
-        help_text='Выберите тег'
+        help_text='Выберите тег',
+        blank=True,
+        null=True
     )
 
 
@@ -149,7 +155,9 @@ class Follow(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Подписчик',
-        related_name='following'
+        related_name='following',
+        blank=True,
+        null=True
     )
     author = models.ForeignKey(
         User,
@@ -185,7 +193,9 @@ class Cart(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Владелец списка',
-        related_name='cart'
+        related_name='cart',
+        blank=True,
+        null=True
     )
     recipe = models.ForeignKey(
         Recipe,
