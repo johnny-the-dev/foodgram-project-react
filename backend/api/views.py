@@ -45,8 +45,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.update(request, *args, **kwargs)
 
     def get_renderers(self):
-        if (self.action == 'download_shopping_cart' and
-                self.request.user.is_authenticated):
+        if (
+            self.action == 'download_shopping_cart'
+            and self.request.user.is_authenticated
+        ):
             return (CSVCartRenderer(),)
         return super().get_renderers()
 
@@ -126,11 +128,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
                         ingredient_amount.amount,
                         ingredient_amount.ingredient.measurement_unit
                     ]
-        result = [{
-            'Ингредиент': ingredient,
-            'Мера измерения': cart_dct[ingredient][1],
-            'Количество': cart_dct[ingredient][0]
-            } for ingredient in cart_dct
+        result = [
+            {
+                'Ингредиент': ingredient,
+                'Мера измерения': cart_dct[ingredient][1],
+                'Количество': cart_dct[ingredient][0]
+            }
+            for ingredient in cart_dct
         ]
         return Response(
             result,

@@ -42,7 +42,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='ingredient.name', required=False)
     measurement_unit = serializers.CharField(
         source='ingredient.measurement_unit', required=False
-        )
+    )
 
     class Meta:
         model = RecipeIngredient
@@ -65,16 +65,17 @@ class CustomUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         return (
-            self.context['request'] and
-            self.context['request'].user.is_authenticated and
-            self.context['request'].user.following.filter(author=obj).exists()
+            self.context['request']
+            and self.context['request'].user.is_authenticated
+            and self.context['request'].user.following.
+            filter(author=obj).exists()
         )
 
 
 class RecipeSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True
-        )
+    )
     ingredients = RecipeIngredientSerializer(many=True)
     author = CustomUserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -99,15 +100,15 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         return (
-            self.context['request'].user.is_authenticated and
-            self.context['request'].user.favorite_recipes.
+            self.context['request'].user.is_authenticated
+            and self.context['request'].user.favorite_recipes.
             filter(recipe=obj).exists()
         )
 
     def get_is_in_shopping_cart(self, obj):
         return (
-            self.context['request'].user.is_authenticated and
-            self.context['request'].user.cart.filter(recipe=obj).exists()
+            self.context['request'].user.is_authenticated
+            and self.context['request'].user.cart.filter(recipe=obj).exists()
         )
 
     def validate_ingredients(self, value):
@@ -169,7 +170,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             if field.field_name == 'tags':
                 ret['tags'] = TagSerializer(
                     instance.tags.all(), many=True
-                    ).data
+                ).data
             else:
                 ret[field.field_name] = field.to_representation(attribute)
 
