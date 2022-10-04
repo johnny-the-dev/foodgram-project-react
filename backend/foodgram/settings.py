@@ -118,11 +118,6 @@ DJOSER = {
     },
 }
 
-CSRF_TRUSTED_ORIGINS = [
-    'http://foodgramproject.sytes.net/',
-    'https://foodgramproject.sytes.net/',
-]
-
 CORS_ORIGIN_ALLOW_ALL = True
 
 LANGUAGE_CODE = 'ru'
@@ -137,7 +132,6 @@ USE_TZ = True
 
 STATIC_URL = '/backend_static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'backend_static')
-STATIC_FILES_DIRS = [os.path.join(BASE_DIR, 'backend_assets'), ]
 
 MEDIA_URL = '/backend_media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'backend_media')
