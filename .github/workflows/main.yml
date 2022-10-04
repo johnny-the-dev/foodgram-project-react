@@ -9,9 +9,10 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
     steps:
+    - uses: actions/checkout@v2
+
     - name: Paths Changes Filter
       uses: dorny/paths-filter@v2.10.2
-
       id: filter
       with:
         filters: |
@@ -25,8 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v2
-
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
