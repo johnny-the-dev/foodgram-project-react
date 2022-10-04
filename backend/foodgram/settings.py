@@ -118,6 +118,11 @@ DJOSER = {
     },
 }
 
+CSRF_TRUSTED_ORIGINS = [
+    'http://foodgramproject.sytes.net/',
+    'https://foodgramproject.sytes.net/',
+]
+
 CORS_ORIGIN_ALLOW_ALL = True
 
 LANGUAGE_CODE = 'ru'
