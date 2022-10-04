@@ -132,7 +132,7 @@ USE_TZ = True
 
 STATIC_URL = '/backend_static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'backend_static')
-STATIC_FILES_DIRS = [os.path.join(BASE_DIR, 'backend_assets'),]
+STATIC_FILES_DIRS = [os.path.join(BASE_DIR, 'backend_assets'), ]
 
 MEDIA_URL = '/backend_media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'backend_media')
