@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-load_dotenv(dotenv_path='~/.env')
+load_dotenv()
 
 SECRET_KEY = os.getenv('SECRET_KEY', default='m$8(sj2y6+p_8s7*n)96@tw+4w5)h%5f&gt)25tp@$-!s8p(ea')
 
@@ -67,7 +67,7 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
+        'ENGINE': os.getenv('DB_ENGINE'),
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('POSTGRES_USER', default='postgres'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='postgres'),
