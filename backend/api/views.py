@@ -19,6 +19,7 @@ from .serializers import (CustomUserSerializer, FavoriteRecipeSerializer,
 class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
+    permission_classes = (permissions.AllowAny,)
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
@@ -26,6 +27,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
+    permission_classes = (permissions.AllowAny,)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
