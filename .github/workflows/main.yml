@@ -1,15 +1,31 @@
-name: foodgram-projext workflow
+name: foodgram-project workflow
 
 on: [push]
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          backend:
+            - 'backend/**'
+          frontend:
+            - 'frontend/**'
   tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v2
+
     - name: Set up Python
-    
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
@@ -42,6 +58,7 @@ jobs:
       - name: Push to Docker Hub
         uses: docker/build-push-action@v2
         with:
+          context: ./backend
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
           
