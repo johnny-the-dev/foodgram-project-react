@@ -1,5 +1,6 @@
 import django_filters
 from recipes.models import Recipe, Tag
+from rest_framework.exceptions import NotAcceptable, NotAuthenticated
 
 
 class RecipeFilter(django_filters.FilterSet):
@@ -15,15 +16,25 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_cart(self, queryset, name, query_value):
         user = self.request.user
-        if user.is_authenticated and query_value == '1':
-            queryset = queryset.filter(cart__user=user)
-        return queryset
+        if not user.is_authenticated:
+            raise NotAuthenticated
+        if query_value == '1':
+            return queryset.filter(cart__user=user)
+        elif query_value == '0':
+            return queryset
+        else:
+            raise NotAcceptable(f'{name} принимает значения 0 или 1')
 
     def filter_favorited(self, queryset, name, query_value):
         user = self.request.user
-        if user.is_authenticated and query_value == '1':
-            queryset = queryset.filter(follower__user=user)
-        return queryset
+        if not user.is_authenticated:
+            raise NotAuthenticated
+        if query_value == '1':
+            return queryset.filter(follower__user=user)
+        elif query_value == '0':
+            return queryset
+        else:
+            raise NotAcceptable(f'{name} принимает значения 0 или 1')
 
     class Meta:
         model = Recipe
