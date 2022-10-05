@@ -22,12 +22,14 @@ class TagViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.AllowAny,)
 
 
+
 class IngredientViewSet(viewsets.ModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
     permission_classes = (permissions.AllowAny,)
+
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
