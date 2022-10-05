@@ -165,6 +165,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.text = validated_data['text']
         instance.cooking_time = validated_data['cooking_time']
         instance.image = validated_data['image']
+        instance.save()
         return instance
 
     def to_representation(self, instance):
