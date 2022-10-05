@@ -1,6 +1,11 @@
 import django_filters
 from recipes.models import Recipe, Tag
 from rest_framework.exceptions import NotAcceptable, NotAuthenticated
+from rest_framework.filters import SearchFilter
+
+
+class IngredientFilter(SearchFilter):
+    search_param = 'name'
 
 
 class RecipeFilter(django_filters.FilterSet):
