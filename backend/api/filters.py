@@ -8,8 +8,7 @@ class RecipeFilter(django_filters.FilterSet):
     tags = django_filters.ModelMultipleChoiceFilter(
         to_field_name='slug',
         lookup_expr='slug',
-        queryset=Tag.objects.all(),
-        conjoined=True
+        queryset=Tag.objects.all()
     )
     is_favorited = django_filters.Filter(method='filter_favorited')
     is_in_shopping_cart = django_filters.Filter(method='filter_cart')

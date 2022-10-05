@@ -1,3 +1,4 @@
+from django.core import validators
 from django.db import models
 from users.models import User
 
@@ -13,7 +14,10 @@ class Tag(models.Model):
         max_length=7,
         unique=True,
         verbose_name='Цвет тега',
-        help_text='Введите цветовой HEX-код тега'
+        help_text='Введите цветовой HEX-код тега',
+        validators=[validators.RegexValidator(
+            regex=r'^#([\da-fA-F][\da-fA-F][\da-fA-F]){1,2}$'
+        )]
     )
     slug = models.SlugField(
         unique=True,
@@ -81,7 +85,8 @@ class Recipe(models.Model):
     )
     cooking_time = models.SmallIntegerField(
         verbose_name='Время приготовления (минуты)',
-        help_text='Введите время приготовления в минутах'
+        help_text='Введите время приготовления в минутах',
+        validators=[validators.MinValueValidator(1)]
     )
     tags = models.ManyToManyField(
         Tag,
@@ -123,6 +128,7 @@ class RecipeIngredient(models.Model):
     amount = models.IntegerField(
         verbose_name='Количество',
         help_text='Укажите количество ингредиента',
+        validators=[validators.MinValueValidator(1)],
         null=True,
         blank=True
     )
