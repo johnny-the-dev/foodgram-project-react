@@ -47,6 +47,17 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
+    def to_representation(self, instance):
+        ret = OrderedDict()
+        fields = self._readable_fields
+        for field in fields:
+            if field.field_name == 'id':
+                ret['id'] = instance.ingredient.pk
+            else:
+                attribute = field.get_attribute(instance)
+                ret[field.field_name] = field.to_representation(attribute)
+        return ret
+
 
 class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField()
