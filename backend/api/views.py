@@ -39,9 +39,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def partial_update(self, request, *args, **kwargs):
-        kwargs['partial'] = False
-        return self.update(request, *args, **kwargs)
+    # def partial_update(self, request, *args, **kwargs):
+    #     kwargs['partial'] = False
+    #     return self.update(request, *args, **kwargs)
 
     def get_renderers(self):
         if (
