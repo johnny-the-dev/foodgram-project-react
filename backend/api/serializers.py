@@ -197,6 +197,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         return ret
 
 
+class UpdateRecipeSerializer(RecipeSerializer):
+    image = Base64ImageField(required=False)
+
+
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
 
