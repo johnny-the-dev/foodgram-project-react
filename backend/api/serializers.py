@@ -1,8 +1,6 @@
-# import base64
 import base64
 from collections import OrderedDict
 
-# from django.core.files.base import ContentFile
 from djoser.serializers import UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag
@@ -17,7 +15,7 @@ class CustomBase64ImageField(Base64ImageField):
         try:
             with open(file.path, "rb") as f:
                 return (
-                    'data:image/jpeg;base64,'
+                    'base64,'
                     + base64.b64encode(f.read()).decode()
                 )
         except Exception:
@@ -170,10 +168,12 @@ class RecipeSerializer(serializers.ModelSerializer):
             self.add_ingredient(ingredient_obj, instance)
         for tag in tags:
             RecipeTag.objects.create(recipe=instance, tag=tag)
-        instance.name = validated_data['name']
-        instance.text = validated_data['text']
-        instance.cooking_time = validated_data['cooking_time']
-        instance.image = validated_data['image']
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get(
+            'cooking_time', instance.cooking_time
+        )
+        instance.image = validated_data.get('image', instance.image)
         instance.save()
         return instance
 

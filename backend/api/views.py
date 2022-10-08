@@ -13,8 +13,7 @@ from .permissions import IsAuthorOrReadonly
 from .renrerers import CSVCartRenderer
 from .serializers import (CustomUserSerializer, FavoriteRecipeSerializer,
                           FollowUserSerializer, IngredientSerializer,
-                          RecipeSerializer, TagSerializer,
-                          UpdateRecipeSerializer)
+                          RecipeSerializer, TagSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -39,11 +38,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
-    def partial_update(self, request, *args, **kwargs):
-        self.serializer_class = UpdateRecipeSerializer
-        kwargs['partial'] = False
-        return self.update(request, *args, **kwargs)
 
     def get_renderers(self):
         if (
