@@ -1,4 +1,5 @@
 # import base64
+import base64
 from collections import OrderedDict
 
 # from django.core.files.base import ContentFile
@@ -8,16 +9,15 @@ from recipes.models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag
 from rest_framework import serializers
 from users.models import User
 
-# class Base64ImageField(serializers.ImageField):
-#     def to_internal_value(self, data):
-#         if isinstance(data, str) and data.startswith('data:image'):
-#             format, imgstr = data.split(';base64,')
-#             ext = format.split('/')[-1]
-
-#             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
-#         return super().to_internal_value(data)
-
+class CustomBase64ImageField(Base64ImageField):
+    def to_representation(self, file):
+        if not file:
+            return ""
+        try:
+            with open(file.path, "rb") as f:
+                return 'data:image/jpeg;base64,' + base64.b64encode(f.read()).decode()
+        except Exception:
+            raise IOError("Error encoding file")
 
 class ImageSerializer(serializers.Serializer):
     image = Base64ImageField(represent_in_base64=True)
@@ -94,7 +94,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    image = Base64ImageField(represent_in_base64=True)
+    image = CustomBase64ImageField()
     cooking_time = serializers.IntegerField(min_value=1)
 
     class Meta:
@@ -169,7 +169,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.text = validated_data['text']
         instance.cooking_time = validated_data['cooking_time']
         instance.image = validated_data['image']
-        print(validated_data)
         instance.save()
         return instance
 
