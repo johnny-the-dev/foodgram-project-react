@@ -1,13 +1,12 @@
-import base64
-from drf_extra_fields.fields import Base64ImageField
+# import base64
 from collections import OrderedDict
 
-from django.core.files.base import ContentFile
+# from django.core.files.base import ContentFile
 from djoser.serializers import UserSerializer
+from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag
 from rest_framework import serializers
 from users.models import User
-
 
 # class Base64ImageField(serializers.ImageField):
 #     def to_internal_value(self, data):
