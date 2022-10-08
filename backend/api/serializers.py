@@ -9,15 +9,20 @@ from recipes.models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag
 from rest_framework import serializers
 from users.models import User
 
+
 class CustomBase64ImageField(Base64ImageField):
     def to_representation(self, file):
         if not file:
             return ""
         try:
             with open(file.path, "rb") as f:
-                return 'data:image/jpeg;base64,' + base64.b64encode(f.read()).decode()
+                return (
+                    'data:image/jpeg;base64,'
+                    + base64.b64encode(f.read()).decode()
+                )
         except Exception:
             raise IOError("Error encoding file")
+
 
 class ImageSerializer(serializers.Serializer):
     image = Base64ImageField(represent_in_base64=True)
