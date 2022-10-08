@@ -1,4 +1,3 @@
-import base64
 from collections import OrderedDict
 
 from djoser.serializers import UserSerializer
@@ -6,25 +5,6 @@ from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, RecipeIngredient, RecipeTag, Tag
 from rest_framework import serializers
 from users.models import User
-
-
-class CustomBase64ImageField(Base64ImageField):
-    def to_representation(self, file):
-        if not file:
-            return ""
-        file_ext = file.url.split('.')[-1]
-        try:
-            with open(file.path, "rb") as f:
-                return (
-                    f'data:image/{file_ext};base64,'
-                    + base64.b64encode(f.read()).decode()
-                )
-        except Exception:
-            raise IOError("Error encoding file")
-
-
-class ImageSerializer(serializers.Serializer):
-    image = Base64ImageField(represent_in_base64=True)
 
 
 class TagSerializer(serializers.ModelSerializer):
