@@ -41,6 +41,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = False
+        # image = self.get_object().image
         return self.update(request, *args, **kwargs)
 
     def get_renderers(self):

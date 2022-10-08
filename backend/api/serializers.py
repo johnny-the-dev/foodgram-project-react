@@ -19,6 +19,10 @@ from users.models import User
 #         return super().to_internal_value(data)
 
 
+class ImageSerializer(serializers.Serializer):
+    image = Base64ImageField(represent_in_base64=True)
+
+
 class TagSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all())
 
@@ -90,7 +94,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    image = Base64ImageField(represent_in_base64=True)
+    image = Base64ImageField()
     cooking_time = serializers.IntegerField(min_value=1)
 
     class Meta:
@@ -165,6 +169,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.text = validated_data['text']
         instance.cooking_time = validated_data['cooking_time']
         instance.image = validated_data['image']
+        print(validated_data)
         instance.save()
         return instance
 
