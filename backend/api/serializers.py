@@ -98,7 +98,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    image = CustomBase64ImageField()
+    image = Base64ImageField()
     cooking_time = serializers.IntegerField(min_value=1)
 
     class Meta:
@@ -196,10 +196,6 @@ class RecipeSerializer(serializers.ModelSerializer):
                 ret[field.field_name] = field.to_representation(attribute)
 
         return ret
-
-
-class UpdateRecipeSerializer(RecipeSerializer):
-    image = Base64ImageField(required=False)
 
 
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
