@@ -12,10 +12,11 @@ class CustomBase64ImageField(Base64ImageField):
     def to_representation(self, file):
         if not file:
             return ""
+        file_ext = file.url.split('.')[-1]
         try:
             with open(file.path, "rb") as f:
                 return (
-                    'base64,'
+                    f'data:image/{file_ext};base64,'
                     + base64.b64encode(f.read()).decode()
                 )
         except Exception:
